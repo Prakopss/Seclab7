@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Akses Wi-Fi Tamu - PT Teknologi Aman Sejahtera</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --brand-primary: #0f3d64;
+            --brand-secondary: #0088cc;
+            --brand-dark: #0a1e32;
+            --terminal-bg: #0d1117;
+            --terminal-text: #58a6ff;
+        }
+
+        body {
+            background-color: #f1f5f9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #334155;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar-brand-tas {
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: var(--brand-dark) !important;
+        }
+
+        .header-top {
+            background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-primary) 100%);
+            color: #ffffff;
+            padding: 1.25rem 0;
+            border-bottom: 3px solid var(--brand-secondary);
+        }
+
+        .card-custom {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            background: #ffffff;
+        }
+
+        .nav-tabs .nav-link {
+            font-weight: 600;
+            color: #64748b;
+            border: none;
+            padding: 0.85rem 1.25rem;
+            border-bottom: 3px solid transparent;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--brand-primary);
+            background: transparent;
+            border-bottom: 3px solid var(--brand-primary);
+        }
+
+        .terminal-box {
+            background-color: var(--terminal-bg);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            font-size: 0.875rem;
+            color: #c9d1d9;
+            min-height: 180px;
+            max-height: 380px;
+            overflow-y: auto;
+            border: 1px solid #30363d;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #161b22;
+            padding: 0.5rem 1rem;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            border: 1px solid #30363d;
+            border-bottom: none;
+            font-family: inherit;
+            font-size: 0.78rem;
+            color: #8b949e;
+        }
+
+        .terminal-dots span {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .badge-status {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.35rem 0.65rem;
+        }
+
+        .footer-enterprise {
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            margin-top: auto;
+            padding: 1.75rem 0;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Corporate Banner -->
+    <header class="header-top shadow-sm">
+        <div class="container d-flex flex-wrap align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-shield-check fs-2 text-info me-2"></i>
+                <div>
+                    <h5 class="mb-0 fw-bold">PT TEKNOLOGI AMAN SEJAHTERA</h5>
+                    <small class="text-light opacity-75">Enterprise Guest Access &amp; Network Gate Controller</small>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2 mt-2 mt-md-0">
+                <span class="badge bg-success bg-opacity-25 text-light border border-success border-opacity-50 badge-status">
+                    <i class="bi bi-wifi me-1"></i> SSID: TAS-Corporate-Guest
+                </span>
+                <span class="badge bg-primary bg-opacity-25 text-light border border-primary border-opacity-50 badge-status">
+                    <i class="bi bi-hdd-network me-1"></i> VLAN 24 (Guest Isolated)
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="container my-4 flex-grow-1">
+
+        {% if guest_login_success %}
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 d-flex align-items-center" role="alert">
+            <i class="bi bi-check-circle-fill fs-4 me-3 text-success"></i>
+            <div>
+                <strong>Autentikasi Tamu Berhasil!</strong><br>
+                Selamat datang, <strong>{{ guest_name }}</strong>. Perangkat Anda telah terdaftar dan diberikan izin akses internet selama 4 jam ke depan.
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endif %}
+
+        <div class="row g-4">
+            <!-- Left Column: Primary Interaction Tabs -->
+            <div class="col-lg-8">
+                <div class="card card-custom">
+                    <div class="card-header bg-white pt-3 px-4 border-0">
+                        <ul class="nav nav-tabs card-header-tabs" id="portalTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link {% if active_tab != 'diagnostic' %}active{% endif %}" id="login-tab" data-bs-toggle="tab" data-bs-target="#tab-login" type="button" role="tab" aria-selected="{% if active_tab != 'diagnostic' %}true{% else %}false{% endif %}">
+                                    <i class="bi bi-person-badge me-1"></i> Aktivasi Akses Tamu
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link {% if active_tab == 'diagnostic' %}active{% endif %}" id="diagnostic-tab" data-bs-toggle="tab" data-bs-target="#tab-diagnostic" type="button" role="tab" aria-selected="{% if active_tab == 'diagnostic' %}true{% else %}false{% endif %}">
+                                    <i class="bi bi-speedometer2 me-1"></i> Uji Konektivitas Jaringan
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="card-body p-4">
+                        <div class="tab-content" id="portalTabContent">
+                            
+                            <!-- TAB 1: GUEST REGISTRATION FORM -->
+                            <div class="tab-pane fade {% if active_tab != 'diagnostic' %}show active{% endif %}" id="tab-login" role="tabpanel" aria-labelledby="login-tab">
+                                <div class="mb-3">
+                                    <h5 class="fw-bold text-dark mb-1">Registrasi Akses Jaringan Tamu</h5>
+                                    <p class="text-muted small">
+                                        Sesuai dengan kebijakan keamanan operasional PT Teknologi Aman Sejahtera, seluruh pengunjung diwajibkan mendaftarkan profil sebelum mendapatkan akses internet keluar.
+                                    </p>
+                                </div>
+
+                                <form action="/" method="POST">
+                                    <input type="hidden" name="action" value="guest_login">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-semibold">Nama Lengkap Tamu</label>
+                                            <input type="text" name="guest_name" class="form-control" placeholder="Contoh: Budi Santoso" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-semibold">Perusahaan / Institusi Asal</label>
+                                            <input type="text" name="company" class="form-control" placeholder="Contoh: PT Mitra Solusi" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-semibold">Nomor Telepon / WhatsApp</label>
+                                            <input type="tel" name="phone" class="form-control" placeholder="Contoh: 081234567890" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-semibold">Karyawan Penanggung Jawab (Sponsor)</label>
+                                            <input type="text" name="host_employee" class="form-control" placeholder="Contoh: Bagian IT / Divisi Pengadaan" required>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label small fw-semibold">Kode Voucher Kunjungan (Opsional)</label>
+                                            <input type="text" name="voucher" class="form-control" placeholder="Masukkan 8-digit kode jika diberikan oleh resepsionis">
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="agreeTerms" required checked>
+                                                <label class="form-check-label small text-muted" for="agreeTerms">
+                                                    Saya menyetujui Kebijakan Penggunaan Jaringan (Acceptable Use Policy) PT Teknologi Aman Sejahtera dan bersedia mematuhi aturan keamanan siber yang berlaku.
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 pt-2">
+                                            <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                                                <i class="bi bi-box-arrow-in-right me-1"></i> Hubungkan ke Internet
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- TAB 2: NETWORK CONNECTIVITY TEST -->
+                            <div class="tab-pane fade {% if active_tab == 'diagnostic' %}show active{% endif %}" id="tab-diagnostic" role="tabpanel" aria-labelledby="diagnostic-tab">
+                                <div class="mb-3">
+                                    <h5 class="fw-bold text-dark mb-1">Pemeriksaan Keterjangkauan Host &amp; Gateway</h5>
+                                    <p class="text-muted small">
+                                        Layanan diagnostik otomatis untuk memvalidasi apakah alamat host atau gateway eksternal dapat dihubungi dari lingkungan jaringan tamu sebelum memulai sesi penelusuran.
+                                    </p>
+                                </div>
+
+                                <form id="diagnosticForm" action="/diagnostic" method="POST" class="mb-3">
+                                    <div class="mb-3">
+                                        <label for="targetUrl" class="form-label small fw-semibold">Alamat Host / URL Tujuan</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light text-muted"><i class="bi bi-globe2"></i></span>
+                                            <input type="text" class="form-control" id="targetUrl" name="url" placeholder="http://google.com" value="{{ diagnostic_url or 'http://google.com' }}" required>
+                                            <button type="submit" id="btnTest" class="btn btn-primary fw-semibold px-3">
+                                                <span id="btnSpinner" class="spinner-border spinner-border-sm d-none me-1" role="status"></span>
+                                                <i id="btnIcon" class="bi bi-send me-1"></i> Periksa Konektivitas
+                                            </button>
+                                        </div>
+                                        <div class="form-text small text-muted">
+                                            Masukkan alamat target lengkap dengan protokol (misal: <code>http://google.com</code>).
+                                        </div>
+                                    </div>
+                                </form>
+
+                                <!-- Output Terminal Window -->
+                                <div>
+                                    <div class="terminal-header">
+                                        <div class="terminal-dots">
+                                            <span style="background: #ff5f56;"></span>
+                                            <span style="background: #ffbd2e;"></span>
+                                            <span style="background: #27c93f;"></span>
+                                            <strong class="ms-1 text-light">Network Diagnostic Console</strong>
+                                        </div>
+                                        <span id="responseStatusBadge" class="badge bg-secondary">Siap</span>
+                                    </div>
+                                    <pre id="diagnosticOutput" class="terminal-box mb-0">{% if diagnostic_result %}{{ diagnostic_result }}{% else %}Sistem diagnostik siap. Masukkan alamat URL untuk memverifikasi keterjangkauan host.{% endif %}</pre>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Corporate Information & Infrastructure Status -->
+            <div class="col-lg-4">
+                <div class="card card-custom mb-4">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold text-dark mb-3 d-flex align-items-center">
+                            <i class="bi bi-info-circle text-primary me-2"></i> Status Infrastruktur Jaringan
+                        </h6>
+                        <ul class="list-unstyled mb-0 small">
+                            <li class="d-flex justify-content-between py-2 border-bottom">
+                                <span class="text-muted">Gateway Controller</span>
+                                <span class="badge bg-success-subtle text-success fw-semibold">10.240.18.1 (Aktif)</span>
+                            </li>
+                            <li class="d-flex justify-content-between py-2 border-bottom">
+                                <span class="text-muted">Resolusi DNS Utama</span>
+                                <span class="badge bg-success-subtle text-success fw-semibold">10.240.0.53 (Normal)</span>
+                            </li>
+                            <li class="d-flex justify-content-between py-2 border-bottom">
+                                <span class="text-muted">Alamat IP Anda</span>
+                                <span class="text-dark fw-bold">10.240.18.72</span>
+                            </li>
+                            <li class="d-flex justify-content-between py-2 border-bottom">
+                                <span class="text-muted">Titik Akses (AP)</span>
+                                <span class="text-dark">TAS-HQ-LT3-AP04</span>
+                            </li>
+                            <li class="d-flex justify-content-between pt-2">
+                                <span class="text-muted">Kecepatan Alokasi</span>
+                                <span class="text-dark">Maks. 25 Mbps / User</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card card-custom bg-light border-0">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold text-dark mb-2 d-flex align-items-center">
+                            <i class="bi bi-headset text-primary me-2"></i> Pusat Bantuan TI
+                        </h6>
+                        <p class="small text-muted mb-3">
+                            Apabila mengalami kendala jaringan atau membutuhkan akses port khusus untuk keperluan presentasi dan rapat, hubungi operator TI kami:
+                        </p>
+                        <div class="small">
+                            <div class="mb-1"><i class="bi bi-telephone me-2 text-primary"></i><strong>Ext. Internal:</strong> 8801 / 8802</div>
+                            <div class="mb-1"><i class="bi bi-envelope me-2 text-primary"></i><strong>Surel:</strong> helpdesk-it@amansejahtera.co.id</div>
+                            <div><i class="bi bi-geo-alt me-2 text-primary"></i><strong>Lokasi:</strong> Gd. TAS Tower Lt. 5, Ruang NOC</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Enterprise Footer -->
+    <footer class="footer-enterprise">
+        <div class="container text-center">
+            <div class="text-muted mb-2">
+                &copy; 2026 PT Teknologi Aman Sejahtera. Divisi Infrastruktur Jaringan &amp; Operasional TI. Seluruh Hak Cipta Dilindungi.
+            </div>
+            <div class="small text-secondary">
+                <a href="#" class="text-muted text-decoration-none me-3">Kebijakan Penggunaan Jaringan</a>
+                <a href="#" class="text-muted text-decoration-none me-3">Pernyataan Privasi Data</a>
+                <a href="#" class="text-muted text-decoration-none me-3">Pedoman Keamanan Tamu</a>
+                <!-- Internal Infrastructure Services: <a href="/internal-storage">Enterprise Cloud Storage Gateway</a> -->
+                <a href="/internal-storage" class="d-none" id="internal-storage-link" aria-hidden="true" tabindex="-1">Enterprise Cloud Storage Gateway</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Network Diagnostic Live Handler -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-switch to diagnostic tab if hash is present in URL
+            if (window.location.hash === '#diagnostic-tab' || window.location.hash === '#tab-diagnostic') {
+                const diagTabTrigger = document.getElementById('diagnostic-tab');
+                if (diagTabTrigger && window.bootstrap) {
+                    const tabInstance = new bootstrap.Tab(diagTabTrigger);
+                    tabInstance.show();
+                }
+            }
+
+            const diagnosticForm = document.getElementById('diagnosticForm');
+            const targetUrlInput = document.getElementById('targetUrl');
+            const outputBox = document.getElementById('diagnosticOutput');
+            const statusBadge = document.getElementById('responseStatusBadge');
+            const btnSpinner = document.getElementById('btnSpinner');
+            const btnIcon = document.getElementById('btnIcon');
+            const btnTest = document.getElementById('btnTest');
+
+            if (diagnosticForm) {
+                diagnosticForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+
+                    const urlValue = targetUrlInput.value.trim();
+                    if (!urlValue) return;
+
+                    // UI Loading State
+                    btnSpinner.classList.remove('d-none');
+                    btnIcon.classList.add('d-none');
+                    btnTest.disabled = true;
+                    statusBadge.className = 'badge bg-warning text-dark';
+                    statusBadge.textContent = 'Memeriksa...';
+                    outputBox.textContent = `[Mengirim probe ke host: ${urlValue} ...]\nMenunggu respons dari gateway...\n`;
+
+                    try {
+                        const response = await fetch('/diagnostic', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({ url: urlValue })
+                        });
+
+                        const text = await response.text();
+
+                        if (response.ok) {
+                            statusBadge.className = 'badge bg-success';
+                            statusBadge.textContent = `HTTP ${response.status} OK`;
+                        } else {
+                            statusBadge.className = 'badge bg-danger';
+                            statusBadge.textContent = `HTTP ${response.status}`;
+                        }
+
+                        outputBox.textContent = text;
+                    } catch (err) {
+                        statusBadge.className = 'badge bg-danger';
+                        statusBadge.textContent = 'Gagal';
+                        outputBox.textContent = `Error: Gagal menghubungi modul pengujian jaringan lokal.\n${err.message}`;
+                    } finally {
+                        btnSpinner.classList.add('d-none');
+                        btnIcon.classList.remove('d-none');
+                        btnTest.disabled = false;
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+
